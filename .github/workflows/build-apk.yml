@@ -16,6 +16,7 @@ jobs:
     - name: Build with Buildozer in Docker
       run: |
         docker run --rm \
+          -e BUILDOZER_ALLOW_ROOT=1 \
           -v "$PWD":/home/user/hostcwd \
           kivy/buildozer:latest \
           bash -c "cd /home/user/hostcwd && buildozer android debug"
@@ -26,7 +27,5 @@ jobs:
       with:
         name: maya-apk-${{ github.run_number }}
         path: bin/*.apk
-        if-no-files-found: warn
-        retention-days: 30
         if-no-files-found: ignore
         retention-days: 30
