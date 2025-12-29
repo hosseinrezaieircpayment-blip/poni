@@ -24,7 +24,7 @@ jobs:
           -v "$PWD":/home/user/hostcwd \
           -w /home/user/hostcwd \
           kivy/buildozer:latest \
-          -lc "yes | sdkmanager --licenses || true; mkdir -p logs; buildozer -v android debug 2>&1 | tee logs/buildozer.log"
+          -lc "mkdir -p logs; yes | buildozer -v android clean; yes | buildozer -v android debug 2>&1 | tee logs/buildozer.log"
 
     - name: Find built APKs
       run: |

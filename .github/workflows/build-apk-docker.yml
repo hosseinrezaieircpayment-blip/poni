@@ -22,7 +22,7 @@ jobs:
           -v "$PWD":/workspace \
           -w /workspace \
           kivy/buildozer:latest \
-          -lc "mkdir -p /workspace/logs; yes | sdkmanager --licenses || true; buildozer -v android clean && buildozer -v android debug 2>&1 | tee /workspace/logs/buildozer.log"
+          -lc "mkdir -p /workspace/logs; yes | buildozer -v android clean; yes | buildozer -v android debug 2>&1 | tee /workspace/logs/buildozer.log"
 
     - name: Show tail of build logs (always)
       if: always()
