@@ -1,0 +1,28 @@
+name: Build Android APK (Docker)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build with Docker
+      run: |
+        docker run --rm \
+          -v "$PWD":/workspace \
+          -w /workspace \
+          kivy/buildozer \
+          buildozer android debug
+    
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: maya-apk-${{ github.run_number }}
+        path: bin/*.apk
+        if-no-files-found: ignore
