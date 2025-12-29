@@ -24,6 +24,17 @@ jobs:
           kivy/buildozer:latest \
           -lc "yes | sdkmanager --licenses || true; mkdir -p logs; buildozer -v android debug 2>&1 | tee logs/buildozer.log"
 
+    - name: Find built APKs
+      run: |
+        echo "Searching for APKs in workspace..."
+        find . -type f -name "*.apk" -print | tee apk_paths.txt
+        echo "--- apk_paths.txt ---"
+        cat apk_paths.txt || true
+        if [ ! -s apk_paths.txt ]; then
+          echo "No APK found after build!" >&2
+          exit 1
+        fi
+
     - name: Show tail of build logs (always)
       if: always()
       run: |
@@ -40,6 +51,15 @@ jobs:
         path: logs/buildozer.log
         if-no-files-found: warn
         retention-days: 14
+
+    - name: Upload found APK paths (always)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: apk-paths-${{ github.run_number }}
+        path: apk_paths.txt
+        if-no-files-found: warn
+        retention-days: 7
     
     - name: Upload APK artifact
       if: success()

@@ -1,8 +1,7 @@
 name: Build Android APK (Docker)
 
 on:
-  push:
-    branches: [ main, master ]
+  # Disable auto runs to avoid duplicate builds; trigger manually if needed
   workflow_dispatch:
 
 jobs:
