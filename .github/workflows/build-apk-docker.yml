@@ -18,10 +18,11 @@ jobs:
       run: |
         mkdir -p logs
         docker run --rm \
+          -e BUILDOZER_ALLOW_ROOT=1 \
           -v "$PWD":/workspace \
           -w /workspace \
           kivy/buildozer \
-          /bin/bash -lc "export BUILDOZER_ALLOW_ROOT=1; mkdir -p /workspace/logs; buildozer -v android clean && buildozer -v android debug 2>&1 | tee /workspace/logs/buildozer.log"
+          /bin/bash -lc "mkdir -p /workspace/logs; buildozer -v android clean && buildozer -v android debug 2>&1 | tee /workspace/logs/buildozer.log"
 
     - name: Show tail of build logs (always)
       if: always()
