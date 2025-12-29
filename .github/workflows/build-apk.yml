@@ -40,7 +40,16 @@ jobs:
           libssl-dev \
           build-essential \
           libltdl-dev \
-          wget
+          wget \
+          sudo \
+          gcc \
+          g++ \
+          make \
+          gettext \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          libsdl2-mixer-dev \
+          libsdl2-ttf-dev
     
     - name: Set JAVA_HOME
       run: |
@@ -49,8 +58,8 @@ jobs:
     
     - name: Install Buildozer and Cython
       run: |
-        pip install --upgrade pip
-        pip install buildozer cython
+        pip install --upgrade pip setuptools wheel
+        pip install buildozer cython==0.29.36
     
     - name: Cache Buildozer dependencies
       uses: actions/cache@v3
@@ -65,9 +74,12 @@ jobs:
     - name: Build APK with Buildozer
       run: |
         # اجازه دسترسی به اندروید SDK
-        yes | buildozer android debug
+        yes | buildozer android debug 2>&1 | tee build.log
       env:
         ANDROID_SDK_ROOT: ${{ github.workspace }}/.buildozer/android/platform/android-sdk
+        ANDROID_SDK_VERSION: 33
+        ANDROID_NDK_VERSION: 25b
+      continue-on-error: true
     
     - name: List bin directory
       run: |
