@@ -46,8 +46,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: maya-apk-${{ github.run_number }}
-        path: |
-          bin/*.apk
-          bin/*.aab
+        path: bin
         if-no-files-found: ignore
         retention-days: 30
