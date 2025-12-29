@@ -112,7 +112,7 @@ android.allow_backup = True
 # android.release_artifact = aab
 
 # (str) The format used to package the app for debug mode (apk or aab).
-# android.debug_artifact = apk
+android.debug_artifact = apk
 
 #
 # Python for android (p4a) specific
