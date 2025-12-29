@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
     - uses: actions/checkout@v3
@@ -28,6 +30,24 @@ jobs:
         tail -n 200 logs/buildozer.log || echo "No buildozer.log yet"
         echo "=== List bin dir ==="
         ls -lah bin || echo "No bin dir"
+
+    - name: Publish logs to ci-logs branch (always)
+      if: always()
+      run: |
+        set -e
+        mkdir -p ci-logs
+        cp -f logs/buildozer.log ci-logs/buildozer-${{ github.run_id }}.log || true
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git fetch origin
+        git checkout -B ci-logs
+        git add ci-logs/*.log || true
+        if git diff --cached --quiet; then
+          echo "No new logs to commit"
+        else
+          git commit -m "CI logs: run ${{ github.run_id }}"
+          git push origin ci-logs
+        fi
     
     - name: Upload build logs (always)
       if: always()
