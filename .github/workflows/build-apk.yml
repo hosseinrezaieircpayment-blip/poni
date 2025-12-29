@@ -20,7 +20,7 @@ jobs:
           -v "$PWD":/workspace \
           -w /workspace \
           kivy/buildozer:latest \
-          /bin/bash -c "buildozer android debug"
+          /bin/bash -c "echo 'y' | buildozer android debug"
     
     - name: Upload APK artifact
       if: success()

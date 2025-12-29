@@ -22,7 +22,7 @@ jobs:
           -v "$PWD":/workspace \
           -w /workspace \
           kivy/buildozer:latest \
-          /bin/bash -c "mkdir -p /workspace/logs; buildozer -v android clean && buildozer -v android debug 2>&1 | tee /workspace/logs/buildozer.log"
+          /bin/bash -c "mkdir -p /workspace/logs; echo 'y' | buildozer -v android clean && echo 'y' | buildozer -v android debug 2>&1 | tee /workspace/logs/buildozer.log"
 
     - name: Show tail of build logs (always)
       if: always()
