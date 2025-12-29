@@ -12,17 +12,37 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: Build with Docker
+    - name: Build with Docker (verbose)
       run: |
+        mkdir -p logs
         docker run --rm \
           -v "$PWD":/workspace \
           -w /workspace \
           kivy/buildozer \
-          buildozer android debug
+          /bin/bash -lc "buildozer -v android debug 2>&1 | tee /workspace/logs/buildozer.log"
+
+    - name: Show tail of build logs (always)
+      if: always()
+      run: |
+        echo "=== Tail buildozer.log ==="
+        tail -n 200 logs/buildozer.log || echo "No buildozer.log yet"
+        echo "=== List bin dir ==="
+        ls -lah bin || echo "No bin dir"
     
-    - name: Upload APK
+    - name: Upload build logs (always)
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-logs-${{ github.run_number }}
+        path: logs/buildozer.log
+        if-no-files-found: warn
+        retention-days: 14
+
+    - name: Upload APK (on success)
+      if: success()
       uses: actions/upload-artifact@v3
       with:
         name: maya-apk-${{ github.run_number }}
         path: bin/*.apk
         if-no-files-found: ignore
+        retention-days: 30
