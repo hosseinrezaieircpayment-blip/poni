@@ -38,13 +38,26 @@ jobs:
         python -m pip install --upgrade pip
         pip install buildozer cython==0.29.32
     
-    - name: Build APK
+    - name: Build APK (capture full log)
+      env:
+        BUILDOZER_ALLOW_ROOT: "1"
       run: |
-        buildozer android debug 2>&1 | tail -50
+        set -euo pipefail
+        mkdir -p logs
+        buildozer -v android debug 2>&1 | tee logs/buildozer.log
         echo "=== Checking for APK ==="
         find . -name "*.apk" -type f 2>/dev/null || echo "No APK found yet"
+
+    - name: Upload build log (always)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log-${{ github.run_number }}
+        path: logs/buildozer.log
+        if-no-files-found: warn
+        retention-days: 14
     
-    - name: Upload artifact
+    - name: Upload APK artifact
       if: success()
       uses: actions/upload-artifact@v4
       with:
