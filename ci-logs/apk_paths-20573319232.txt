@@ -1,0 +1,3 @@
+./.buildozer/android/platform/python-for-android/maya-debug-3.0.apk
+./.buildozer/android/platform/build-arm64-v8a_armeabi-v7a/dists/maya/build/outputs/apk/debug/maya-debug.apk
+./bin/maya-3.0-arm64-v8a_armeabi-v7a-debug.apk
