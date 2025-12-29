@@ -20,7 +20,7 @@ version = 3.0
 
 # (list) Application requirements
 # THIS is where you specify your dependencies!
-requirements = python3,kivy==2.2.1,requests,android,pyjnius
+requirements = python3,kivy==2.1.0,requests,android,pyjnius
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
