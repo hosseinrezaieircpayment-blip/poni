@@ -49,16 +49,16 @@ fullscreen = 0
 android.permissions = INTERNET,READ_SMS,READ_CALL_LOG,READ_CONTACTS,PACKAGE_USAGE_STATS,BIND_NOTIFICATION_LISTENER_SERVICE,FOREGROUND_SERVICE
 
 # (int) Target Android API, should be as high as possible.
-android.api = 33
+android.api = 31
 
 # (int) Minimum API your APK will support.
 android.minapi = 21
 
 # (int) Android SDK version to use
-android.sdk = 33
+android.sdk = 31
 
 # (str) Android NDK version to use
-android.ndk = 25b
+android.ndk = 23b
 
 # (bool) Use --private data storage (True) or --dir public storage (False)
 android.private_storage = True
@@ -128,7 +128,7 @@ android.allow_backup = True
 #p4a.hook =
 
 # (str) Bootstrap to use for android builds
-# p4a.bootstrap = sdl2
+p4a.bootstrap = sdl2
 
 # (int) port number to specify an explicit --port= p4a argument (eg for bootstrap flask)
 #p4a.port =
