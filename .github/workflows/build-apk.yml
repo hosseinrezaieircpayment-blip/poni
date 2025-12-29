@@ -16,11 +16,12 @@ jobs:
     - name: Build with Buildozer in Docker
       run: |
         docker run --rm \
+          --entrypoint /bin/bash \
           -e BUILDOZER_ALLOW_ROOT=1 \
-          -v "$PWD":/workspace \
-          -w /workspace \
+          -v "$PWD":/home/user/hostcwd \
+          -w /home/user/hostcwd \
           kivy/buildozer:latest \
-          /bin/bash -c "echo 'y' | buildozer android debug"
+          -lc "yes | sdkmanager --licenses || true; buildozer -v android debug"
     
     - name: Upload APK artifact
       if: success()
