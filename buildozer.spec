@@ -26,7 +26,7 @@ version = 3.0
 
 # (list) Application requirements
 # THIS is where you specify your dependencies!
-requirements = python3,kivy==2.1.0,requests,android,pyjnius
+requirements = python3,kivy==2.1.0,kivymd,requests,android,pyjnius
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -46,7 +46,7 @@ fullscreen = 0
 
 # (list) Permissions
 # CRITICAL: All permissions needed for SMS, Calls, Usage Stats, and Notifications
-android.permissions = INTERNET,READ_SMS,READ_CALL_LOG,READ_CONTACTS,PACKAGE_USAGE_STATS,BIND_NOTIFICATION_LISTENER_SERVICE,FOREGROUND_SERVICE
+android.permissions = INTERNET,READ_SMS,READ_CALL_LOG,READ_CONTACTS,BIND_NOTIFICATION_LISTENER_SERVICE,PACKAGE_USAGE_STATS
 
 # (int) Target Android API, should be as high as possible.
 android.api = 31
